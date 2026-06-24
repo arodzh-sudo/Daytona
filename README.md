@@ -1,31 +1,189 @@
-<h1 align="center">Daytona</h1>
+# Daytona
 
-## What to do
-The pipeline is a Nextflow version of the Flaq_flaq_sc2 pipeline (FL BPHL's SARS-CoV-2 analysis pipeline). And the function of human read removal is added to the pipeline. 
+<p align="center">
+  <em>⚠️ For research use only. Results were obtained by procedures that were not CLIA validated.</em>
+</p>
 
-## Prerequisites
-Nextflow should be installed. The detail of installation can be found in https://github.com/nextflow-io/nextflow.
+<p align="center">
+  <img src="https://img.shields.io/badge/Pipeline-Daytona-blue?style=plastic" />
+  <img src="https://img.shields.io/badge/Nextflow-≥23.04-brightgreen?style=plastic&logo=nextflow" />
+  <img src="https://img.shields.io/badge/Python-3.10+-yellow?style=plastic&logo=python" />
+  <img src="https://img.shields.io/badge/License-MIT-red?style=plastic" />
+</p>
 
-Python3 is needed.
+## 🦠🧬 Overview
 
-Singularity is also needed. The detail of installation can be found in https://singularity-tutorial.github.io/01-installation/.
+Daytona is Florida BPHL's Nextflow pipeline for SARS-CoV-2 NGS data analysis. It processes paired-end Illumina reads through human read removal, quality control, adapter trimming, reference-based assembly, variant calling, lineage/clade assignment and GenBank submission validation.
 
-In addition, the below docker container images are needed in the pipeline. These images should be downloaded to the directory /apps/staphb-toolkit/containers/ in your local computer. You can find them from ncbi/sra-human-scrubber (https://hub.docker.com/r/ncbi/sra-human-scrubber) and StaPH-B/docker-builds (https://github.com/StaPH-B/docker-builds).
+Reads are aligned to the Wuhan-Hu-1 reference (`MN908947.3`) and primer-trimmed against an ARTIC primer scheme (default `ARTIC-V5.3.2`). [Pangolin](https://github.com/cov-lineages/pangolin) assigns Pango lineages and [Nextclade](https://github.com/nextstrain/nextclade) assigns Nextstrain clades using the current `sars-cov-2` dataset. Spike mutations of concern (SOTC) are screened from the Nextclade output, and [VADR](https://github.com/ncbi/vadr) validates consensus sequences for GenBank submission.
 
-1. fastqc_0.11.9.sif
-2. trimmomatic_0.39.sif
-3. bbtools_38.76.sif
-4. multiqc_1.8.sif
-5. bwa_0.7.17.sif
-6. samtools_1.12.sif
-7. vadr_1.3.sif
-8. pangolin_4.1.2-pdata-1.13.sif
-9. nextclade_2021-03-15.sif
-10. sra-human-scrubber_1.1.2021-05-05.sif
+### ⚙️ Dependencies
 
-## How to run
-1. put your data files into directory /fastqs. Your data file's name should look like "JBS22002292_1.fastq.gz", "JBS22002292_2.fastq.gz" 
-2. open file "parames.yaml", set the parameters. 
-3. get into the directory of the pipeline, run "sbatch ./sbatch_flaq_sc2_nf.sh"
+- **Nextflow** 23.04–25.x - [installation guide](https://github.com/nextflow-io/nextflow)
+- **Apptainer/Singularity** - [installation guide](https://apptainer.org/docs/user/latest/)
+- **Conda** - [installation guide](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
+- **SLURM** workload manager (required for HiPerGator; otherwise not required)
 
-#### Note: some sample data files can be found in directory /fastqs/sample_data
+All bioinformatics tools run inside containers, no additional software installation is required.
+
+> ⚠️ **Nextflow ≥ 26.0 is not supported.** That release introduced breaking changes to DSL2 module parsing. Use Nextflow 23.04–25.x.
+
+### 💻 Resource Requirements
+
+Daytona is designed to run on an HPC environment but can run locally with sufficient resources.
+
+- **CPUs:** 24 recommended; minimum 8
+- **RAM:** 50 GB recommended; minimum 16 GB
+- **Disk:** ~2–3 GB per sample (input + output)
+
+### 🛠️ Setup
+
+#### 1. Create the conda environment
+
+```bash
+$ conda create -n daytona -c conda-forge python=3.10
+```
+
+#### 2. Configure params.yaml
+
+Edit `params.yaml` and set the input and output paths for your run:
+
+```yaml
+input:  "/full/path/to/fastqs"
+output: "/full/path/to/output"
+```
+
+Both `input` and `output` must be absolute paths with no trailing slash. Optionally override `primer_scheme` (default `ARTIC-V5.3.2`) and `sotc` (default `S:L452R,S:E484K`).
+
+#### 3. Configure daytona.sh
+
+> At Florida BPHL we use **Apptainer** on HiPerGator for containerization. `daytona.sh` is pre-configured for SLURM + Apptainer and is the recommended submission method for FL-BPHL users.
+
+Set `NXF_APPTAINER_CACHEDIR` to your Apptainer image cache directory and add your email address for job notifications:
+
+```bash
+export NXF_APPTAINER_CACHEDIR=/path/to/apptainer/cache
+#SBATCH --mail-user=your@email.gov
+```
+
+### How to Run
+
+Place paired FASTQ files in the directory specified by `params.input`. Both Illumina native (`SAMPLE_S1_L001_R1_001.fastq.gz`) and simplified (`SAMPLE_1.fastq.gz`) naming conventions are supported.
+
+### 🐊 HiPerGator Usage
+
+```bash
+sbatch daytona.sh
+```
+
+### ⚡ Local Usage
+
+```bash
+# Apptainer/Singularity
+nextflow run daytona.nf -profile apptainer -params-file params.yaml
+
+# Docker
+nextflow run daytona.nf -profile docker -params-file params.yaml
+```
+
+### Workflow Diagram
+
+```mermaid
+flowchart TD
+    A([Paired FASTQ Input]) --> B[FASTQC<br/>Raw Read QC]
+    A --> C[HUMAN SCRUBBER<br/>Human Read Removal]
+    C --> D[TRIMMOMATIC<br/>Quality Trimming]
+    D --> E[BBTOOLS<br/>Adapter & PhiX Removal]
+    E --> F[FASTQC<br/>Clean Read QC]
+    E --> H[KRAKEN2<br/>Taxonomic Classification]
+    E --> I[BWA<br/>Align to MN908947.3]
+    I --> M[SAMTOOLS<br/>BAM Processing + Dedup]
+    M --> N[IVAR<br/>Primer Trimming]
+    N --> O[SAMTOOLS<br/>Post-Trim Coverage]
+    N --> P[SAMTOOLS<br/>Mpileup]
+    P --> Q[IVAR<br/>Variant Calling]
+    P --> R[IVAR<br/>Consensus Generation]
+    R --> S{QC GATE<br/>≥80% Genome & ≥100x Depth}
+    S -->|PASS| T[VADR<br/>GenBank Annotation Validation]
+    S -->|PASS| U[NEXTCLADE<br/>Clade + SOTC Screen]
+    S -->|PASS| X[PANGOLIN<br/>Lineage Assignment]
+    S -->|FAIL| V[SUMMARY REPORT<br/>summary_report.txt]
+    T -->|PASS| W[ASSEMBLIES QC PASS<br/>assemblies_qc_pass/]
+    T --> V
+    U --> V
+    X --> V
+    H --> V
+    O --> V
+    V --> G[MULTIQC<br/>Aggregate QC Report]
+    B --> G
+    F --> G
+
+    style A fill:#e1f5e1,color:#000
+    style S fill:#fff4e1,color:#000
+    style V fill:#e1e5ff,color:#000,stroke-width:2px
+    style W fill:#e1f5e1,color:#000,stroke-width:2px
+    style G fill:#e1e5ff,color:#000,stroke-width:2px
+```
+
+> **QC GATE vs. assembly validation:** The **QC GATE** (`qc_flag`) is a minimum genome-breadth and read-depth check (≥80% genome covered, mean depth ≥100×) that gates downstream lineage/clade/validation work. It is **not** a final assembly verdict. Genome **assembly QC is performed by VADR**: a VADR **PASS** (`vadr_flag`) marks a submission-ready consensus, which is collected in `assemblies_qc_pass/`.
+
+### 🧩 Modules
+
+Daytona is made possible thanks to the following tools:
+
+<small>
+
+**Quality Control**: [FastQC](https://github.com/s-andrews/FastQC) 0.12.1 · [Trimmomatic](https://github.com/usadellab/Trimmomatic) 0.40 · [BBTools](https://github.com/bbushnell/BBTools) 39.84 · [MultiQC](https://github.com/MultiQC/MultiQC) 1.34
+
+**Human Read Removal**: [NCBI SRA Human Scrubber](https://github.com/ncbi/sra-human-scrubber) 2.2.1
+
+**Taxonomic Classification**: [Kraken2](https://github.com/DerrickWood/kraken2) 2.17.1 (viral)
+
+**Reference-Based Assembly**: [BWA](https://github.com/lh3/bwa) 0.7.19 · [Samtools](https://github.com/samtools/samtools) 1.23.1 · [iVar](https://github.com/andersen-lab/ivar) 1.4.4
+
+**Lineage Assignment**: [Pangolin](https://github.com/cov-lineages/pangolin) 4.4
+
+**Clade Assignment**: [Nextclade](https://github.com/nextstrain/nextclade) 3.21.2 (`sars-cov-2` dataset)
+
+**Submission Validation**: [VADR](https://github.com/ncbi/vadr) 1.7 (`sarscov2` model)
+
+</small>
+
+### 📁 Output
+
+Per-sample results are written to `params.output/<sample_id>/`. A single summary file is written to `params.output/`:
+
+```markdown
+output/
+├── <sample_id>/
+│   ├── fastqc/
+│   ├── fastqc_clean/
+│   ├── humanscrubber/
+│   ├── trimmomatic/
+│   ├── bbtools/
+│   ├── kraken2/
+│   ├── samtools/
+│   ├── ivar/
+│   ├── vadr/
+│   ├── pangolin/
+│   └── nextclade/
+├── assemblies_qc_pass/
+├── multiqc/
+└── summary_report.txt
+```
+
+| File | Samples | Key fields |
+|------|---------|------------|
+| `summary_report.txt` | All | sample_id · kraken2_percent · reference · coverage stats · assembly stats · nextclade_clade · pangolin_version · lineage · SOTC · vadr_flag · qc_flag |
+
+### 🤝 Contributing
+
+We welcome contributions to make Daytona better! Feel free to open issues or submit pull requests to suggest additional features or enhancements.
+
+### 📧 Contact
+
+**Email**: [bphl-sebioinformatics@flhealth.gov](mailto:bphl-sebioinformatics@flhealth.gov)
+
+### ⚖️ License
+
+Daytona is licensed under the [MIT License](LICENSE).

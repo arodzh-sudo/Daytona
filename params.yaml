@@ -1,11 +1,7 @@
-# The parameters "input", "output", "reference" and "primer" are the absolute paths. Do not include the "/" at the end of the paths.
-input          : "/blue/bphl-florida/dongyibo/Dev_flaq_sc2_nf/fastqs"
-output    : "/blue/bphl-florida/dongyibo/Dev_flaq_sc2_nf/output"
-reference      : "/blue/bphl-florida/dongyibo/Dev_flaq_sc2_nf/reference"
-primer    : "/blue/bphl-florida/dongyibo/Dev_flaq_sc2_nf/primers"
-# specify if input amplicons were fragmented. If yes, the parameter setting is "frag". If no, the parameter setting is "no_frag". (default: frag)
-frag : "frag"
-# comma separated list of SOTCs to screen, default as "S:L452R,S:E484K"
-sotc : "S:L452R,S:E484K"
+# Input / Output absolute paths, no trailing slash "/"
+input:  "/full/path/to/fastqs"
+output: "/full/path/to/output"
 
-
+# Optional overrides (defaults set in nextflow.config):
+# primer_scheme: "ARTIC-V5.3.2"        # one of ARTIC-V1/V2/V3/V4/V4.1/V5.3.2 (assets/primers)
+# sotc:          "S:L452R,S:E484K"     # comma-separated spike mutations to screen
