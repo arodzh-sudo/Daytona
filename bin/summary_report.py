@@ -291,6 +291,11 @@ def main():
         qf   = qc.get(sid, "NA")
         pang = pangolin.get(sid, {})
 
+        # QC-failed samples never reach VADR; report FAIL (not NA) so the
+        # qc_flag/vadr_flag pair is unambiguous.
+        if vf == "NA" and qf.startswith("FAIL"):
+            vf = "FAIL"
+
         raw_reads   = trimstats.get(sid, "NA")
         clean_reads = phix_log.get(sid, "NA")
 

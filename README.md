@@ -104,9 +104,9 @@ flowchart TD
     P --> Q[IVAR<br/>Variant Calling]
     P --> R[IVAR<br/>Consensus Generation]
     R --> S{QC GATE<br/>≥80% Genome & ≥100x Depth}
+    R --> U[NEXTCLADE<br/>Clade + SOTC Screen]
+    R --> X[PANGOLIN<br/>Lineage Assignment]
     S -->|PASS| T[VADR<br/>GenBank Annotation Validation]
-    S -->|PASS| U[NEXTCLADE<br/>Clade + SOTC Screen]
-    S -->|PASS| X[PANGOLIN<br/>Lineage Assignment]
     S -->|FAIL| V[SUMMARY REPORT<br/>summary_report.txt]
     T -->|PASS| W[ASSEMBLIES QC PASS<br/>assemblies_qc_pass/]
     T --> V
@@ -125,7 +125,7 @@ flowchart TD
     style G fill:#e1e5ff,color:#000,stroke-width:2px
 ```
 
-> **QC GATE vs. assembly validation:** The **QC GATE** (`qc_flag`) is a minimum genome-breadth and read-depth check (≥80% genome covered, mean depth ≥100×) that gates downstream lineage/clade/validation work. It is **not** a final assembly verdict. Genome **assembly QC is performed by VADR**: a VADR **PASS** (`vadr_flag`) marks a submission-ready consensus, which is collected in `assemblies_qc_pass/`.
+> **QC GATE vs. assembly validation:** The **QC GATE** (`qc_flag`) is a minimum genome-breadth and read-depth check (≥80% genome covered, mean depth ≥100×) that gates **only VADR** (GenBank submission needs a complete genome). Pangolin and Nextclade run on **every** consensus, so a below-threshold genome still reports a lineage, clade, and SOTC — it just carries `qc_flag = FAIL` and `vadr_flag = FAIL`. Genome **assembly QC is performed by VADR**: a VADR **PASS** (`vadr_flag`) marks a submission-ready consensus, which is collected in `assemblies_qc_pass/`.
 
 ### 🧩 Modules
 

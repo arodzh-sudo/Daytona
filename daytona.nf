@@ -107,10 +107,13 @@ workflow {
         .map { _id, meta, consensus -> [ meta, consensus ] }
 
     // Typing & validation
+    // VADR is gated by the QC threshold (GenBank submission needs a complete genome);
+    // Pangolin and Nextclade run on every consensus so below-threshold genomes still
+    // get a lineage, clade, and SOTC reported.
     vadr(ch_pass_consensus)
-    pangolin(ch_pass_consensus)
+    pangolin(ivar_consensus.out.consensus)
 
-    ch_nextclade_input = ch_pass_consensus.combine(nextclade_download().db)
+    ch_nextclade_input = ivar_consensus.out.consensus.combine(nextclade_download().db)
     nextclade(ch_nextclade_input)
 
     ch_barrier = vadr.out.done

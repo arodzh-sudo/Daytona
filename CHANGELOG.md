@@ -38,6 +38,9 @@ BPHL Sanibel module format, modeled on `daytona_dengue`.
   `bwa` (align) + `samtools_bam` (filter → name-sort → fixmate → markdup -r → sort → index)
 - VADR runs **without a model download** — the `sarscov2` model ships in `staphb/vadr` at
   `/opt/vadr/vadr-models/` (`--mkey sarscov2`); no `vadr_download` process is needed
+- QC gate now gates **only VADR**; Pangolin and Nextclade run on all consensus so
+  below-threshold genomes still receive lineage/clade/SOTC. QC-failed samples report
+  `qc_flag = FAIL` and `vadr_flag = FAIL`
 - All embedded-Python logic in the legacy `pystats` process moved to `bin/` scripts
 - Reference/primer/GFF assets moved from `reference/` and `primers/` into `assets/`
 - GFF sequence ID normalized from `NC_045512.2` to `MN908947.3` to match the reference FASTA and
