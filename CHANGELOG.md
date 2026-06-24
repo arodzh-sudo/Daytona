@@ -4,10 +4,10 @@ All notable changes to the Daytona pipeline will be documented in this file.
 
 ---
 
-## [Unreleased] — Sanibel format modernization
+## [Unreleased] - modernization
 
 Full rebuild of the legacy `flaq_sc2_humanclean2.nf` SARS-CoV-2 pipeline into the
-BPHL Sanibel module format, modeled on `daytona_dengue`.
+BPHL GitHub SOP format.
 
 ### Added
 
@@ -28,7 +28,7 @@ BPHL Sanibel module format, modeled on `daytona_dengue`.
   Pangolin lineage/version parsing, Kraken2 SARS-CoV-2 percentage, and SOTC screening from the
   Nextclade v3 `aaSubstitutions` field
 - `assets/` — `reference/` (FASTA + bwa index), `annotations/` (GFF), `primers/` (ARTIC BEDs)
-- `daytona.sh` — Sanibel-format SLURM script (`module load conda apptainer nextflow`,
+- `daytona.sh` — SLURM submission script (`module load conda apptainer nextflow`,
   `NXF_APPTAINER_CACHEDIR`, timestamp rename block)
 - `CHANGELOG.md`
 
@@ -36,14 +36,11 @@ BPHL Sanibel module format, modeled on `daytona_dengue`.
 
 - Alignment **always deduplicates** (the legacy `params.frag` toggle is removed); split into
   `bwa` (align) + `samtools_bam` (filter → name-sort → fixmate → markdup -r → sort → index)
-- VADR runs **without a model download** — the `sarscov2` model ships in `staphb/vadr` at
-  `/opt/vadr/vadr-models/` (`--mkey sarscov2`); no `vadr_download` process is needed
+- VADR uses the in-container `sarscov2` model at `/opt/vadr/vadr-models-sarscov2`
+  (`--mkey sarscov2`, `staphb/vadr:1.7`); no model download is required
 - QC gate now gates **only VADR**; Pangolin and Nextclade run on all consensus so
   below-threshold genomes still receive lineage/clade/SOTC. QC-failed samples report
   `qc_flag = FAIL` and `vadr_flag = FAIL`
-- VADR `--mdir` corrected to `/opt/vadr/vadr-models-sarscov2` — `staphb/vadr:1.7` ships the
-  sarscov2 model in that subdir, not at `$VADRMODELDIR` (`/opt/vadr/vadr-models`); fixes the
-  `sarscov2.minfo ... does not exist` failure that left every `vadr_flag` empty
 - `summary_report.txt` columns reordered (`kraken2_percent` and the `nextclade_*` columns moved
   to the end) and a `nextclade_version` column added — Nextclade software version + dataset tag
   (e.g. `3.21.2_dataset-<tag>`), captured once in `nextclade_download` from `pathogen.json`
@@ -64,10 +61,3 @@ BPHL Sanibel module format, modeled on `daytona_dengue`.
 - `sbatch_flaq_sc2_nf.sh` — replaced by `daytona.sh`
 - Hardcoded `/apps/staphb-toolkit/containers/*.sif` `singularity exec` calls — containers now
   declared per process in `nextflow.config`
-
-### To confirm before production
-
-- Pin `staphb/pangolin` to the current release in `nextflow.config` (lineage calls depend on the
-  bundled `pangolin-data`)
-- Confirm the Nextclade `sars-cov-2` dataset slug (`nextclade dataset list`) and that
-  `staphb/vadr:1.7` bundles the `sarscov2` model
