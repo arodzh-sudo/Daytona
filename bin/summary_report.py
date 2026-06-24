@@ -245,10 +245,19 @@ def main():
     parser.add_argument("--trimstat-dir",  required=True)
     parser.add_argument("--phix-log-dir",  required=True)
     parser.add_argument("--sotc",          default="", help="Comma-separated mutations to screen (e.g. S:L452R,S:E484K)")
+    parser.add_argument("--nextclade-version-file", default="", help="File with the Nextclade <software>_dataset-<tag> version string")
     parser.add_argument("--output",        required=True)
     args = parser.parse_args()
 
     sotc_list = [s.strip() for s in args.sotc.split(",") if s.strip()]
+
+    nextclade_version = "NA"
+    if args.nextclade_version_file:
+        try:
+            with open(args.nextclade_version_file) as fh:
+                nextclade_version = fh.read().strip() or "NA"
+        except OSError:
+            nextclade_version = "NA"
 
     qc        = load_qc(args.qc_dir)
     coverage  = load_coverage(args.coverage_dir)
@@ -266,13 +275,14 @@ def main():
     )
 
     header = [
-        "sample_id", "kraken2_percent",
+        "sample_id",
         "reference", "start", "end",
         "num_raw_reads", "num_clean_reads", "num_mapped_reads", "percent_mapped_clean_reads",
         "cov_bases_mapped", "percent_genome_cov_map", "mean_depth", "mean_base_qual", "mean_map_qual",
         "assembly_length", "numN", "percent_ref_genome_cov",
-        "nextclade_clade", "pangolin_version", "lineage", "SOTC",
         "vadr_flag", "qc_flag",
+        "pangolin_version", "lineage", "SOTC",
+        "kraken2_percent", "nextclade_clade", "nextclade_version",
     ]
 
     if not all_samples:
@@ -333,6 +343,7 @@ def main():
             "numN":                       con.get("numN", "NA"),
             "percent_ref_genome_cov":     pct_ref,
             "nextclade_clade":            clade,
+            "nextclade_version":          nextclade_version,
             "pangolin_version":           pang.get("pangolin_version", "NA"),
             "lineage":                    pang.get("lineage", "NA"),
             "SOTC":                       screen_sotc(nc, sotc_list) if nc else "NA",

@@ -13,22 +13,24 @@ process summary_report {
         path kraken2_reports
         path trimstat_files
         path phix_log_files
+        path nextclade_version_file
     output:
         path "summary_report.txt", emit: report
 
     script:
     """
     summary_report.py \\
-        --qc-dir        . \\
-        --coverage-dir  . \\
-        --consensus-dir . \\
-        --nextclade-dir . \\
-        --vadr-dir      . \\
-        --pangolin-dir  . \\
-        --kraken2-dir   . \\
-        --trimstat-dir  . \\
-        --phix-log-dir  . \\
-        --sotc          "${params.sotc}" \\
-        --output        summary_report.txt
+        --qc-dir                 . \\
+        --coverage-dir           . \\
+        --consensus-dir          . \\
+        --nextclade-dir          . \\
+        --vadr-dir               . \\
+        --pangolin-dir           . \\
+        --kraken2-dir            . \\
+        --trimstat-dir           . \\
+        --phix-log-dir           . \\
+        --sotc                   "${params.sotc}" \\
+        --nextclade-version-file ${nextclade_version_file} \\
+        --output                 summary_report.txt
     """
 }

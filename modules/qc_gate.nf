@@ -1,6 +1,5 @@
 process qc_gate {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/qc", mode: 'copy'
 
     input:
         tuple val(meta), path(consensus), path(coverage)

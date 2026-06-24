@@ -29,7 +29,7 @@ process vadr {
         --lowsim3seq 6 \\
         --alt_fail lowscore,insertnn,deletinn \\
         --mkey sarscov2 \\
-        --mdir /opt/vadr/vadr-models/ \\
+        --mdir /opt/vadr/vadr-models-sarscov2 \\
         ${prefix}.trimmed.fasta \\
         ${prefix}_vadr_results
 

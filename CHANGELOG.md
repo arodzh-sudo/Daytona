@@ -41,6 +41,14 @@ BPHL Sanibel module format, modeled on `daytona_dengue`.
 - QC gate now gates **only VADR**; Pangolin and Nextclade run on all consensus so
   below-threshold genomes still receive lineage/clade/SOTC. QC-failed samples report
   `qc_flag = FAIL` and `vadr_flag = FAIL`
+- VADR `--mdir` corrected to `/opt/vadr/vadr-models-sarscov2` — `staphb/vadr:1.7` ships the
+  sarscov2 model in that subdir, not at `$VADRMODELDIR` (`/opt/vadr/vadr-models`); fixes the
+  `sarscov2.minfo ... does not exist` failure that left every `vadr_flag` empty
+- `summary_report.txt` columns reordered (`kraken2_percent` and the `nextclade_*` columns moved
+  to the end) and a `nextclade_version` column added — Nextclade software version + dataset tag
+  (e.g. `3.21.2_dataset-<tag>`), captured once in `nextclade_download` from `pathogen.json`
+- `qc_gate` no longer publishes a per-sample `qc/` directory; `_qc.tsv` is intermediate-only
+  (consumed by the PASS filter and the summary report)
 - All embedded-Python logic in the legacy `pystats` process moved to `bin/` scripts
 - Reference/primer/GFF assets moved from `reference/` and `primers/` into `assets/`
 - GFF sequence ID normalized from `NC_045512.2` to `MN908947.3` to match the reference FASTA and

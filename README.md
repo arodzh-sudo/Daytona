@@ -174,7 +174,7 @@ output/
 
 | File | Samples | Key fields |
 |------|---------|------------|
-| `summary_report.txt` | All | sample_id · kraken2_percent · reference · coverage stats · assembly stats · nextclade_clade · pangolin_version · lineage · SOTC · vadr_flag · qc_flag |
+| `summary_report.txt` | All | sample_id · reference · coverage stats · assembly stats · vadr_flag · qc_flag · pangolin_version · lineage · SOTC · kraken2_percent · nextclade_clade · nextclade_version |
 
 ### 🤝 Contributing
 

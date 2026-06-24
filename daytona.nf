@@ -113,7 +113,8 @@ workflow {
     vadr(ch_pass_consensus)
     pangolin(ivar_consensus.out.consensus)
 
-    ch_nextclade_input = ivar_consensus.out.consensus.combine(nextclade_download().db)
+    ch_nextclade       = nextclade_download()
+    ch_nextclade_input = ivar_consensus.out.consensus.combine(ch_nextclade.db)
     nextclade(ch_nextclade_input)
 
     ch_barrier = vadr.out.done
@@ -132,7 +133,8 @@ workflow {
         pangolin.out.report.map            { _meta, f -> f }.collect().ifEmpty([]),
         kraken2.out.report.map             { _meta, f -> f }.collect().ifEmpty([]),
         trimmomatic.out.stats.map          { _meta, f -> f }.collect().ifEmpty([]),
-        bbtools_phix.out.phix_log.map      { _meta, f -> f }.collect().ifEmpty([])
+        bbtools_phix.out.phix_log.map      { _meta, f -> f }.collect().ifEmpty([]),
+        ch_nextclade.version
     )
 
     multiqc(summary_report.out.report)
