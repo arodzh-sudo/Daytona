@@ -9,6 +9,15 @@ All notable changes to the Daytona pipeline will be documented in this file.
 Full rebuild of the legacy `flaq_sc2_humanclean2.nf` SARS-CoV-2 pipeline into the
 BPHL GitHub SOP format.
 
+Later additions:
+
+- Per-sample MultiQC (`multiqc_sample`) over each sample's raw + clean FastQC, published to
+  `output/<sample_id>/multiqc/`; the aggregate MultiQC output dir renamed to
+  `output/all_multiqc/` and now runs with `--ignore "*/multiqc/*" --ignore "*/all_multiqc/*"`
+  so it no longer re-ingests MultiQC report/data dirs
+- `nextflow.config` compacted with regex `withName` selectors (`fastqc.*`, `bbtools.*`,
+  `samtools.*`, `ivar.*`)
+
 ### Added
 
 - `daytona.nf` — entry workflow; `meta`-driven, staged-file channel design replacing the

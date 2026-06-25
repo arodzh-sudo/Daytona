@@ -117,12 +117,15 @@ flowchart TD
     V --> G[MULTIQC<br/>Aggregate QC Report]
     B --> G
     F --> G
+    B --> SM[MULTIQC<br/>Per-sample: Raw + Clean FastQC]
+    F --> SM
 
     style A fill:#e1f5e1,color:#000
     style S fill:#fff4e1,color:#000
     style V fill:#e1e5ff,color:#000,stroke-width:2px
     style W fill:#e1f5e1,color:#000,stroke-width:2px
     style G fill:#e1e5ff,color:#000,stroke-width:2px
+    style SM fill:#e1e5ff,color:#000
 ```
 
 > **QC GATE vs. assembly validation:** The **QC GATE** (`qc_flag`) is a minimum genome-breadth and read-depth check (≥80% genome covered, mean depth ≥100×) that gates **only VADR** (GenBank submission needs a complete genome). Pangolin and Nextclade run on **every** consensus, so a below-threshold genome still reports a lineage, clade, and SOTC — it just carries `qc_flag = FAIL` and `vadr_flag = FAIL`. Genome **assembly QC is performed by VADR**: a VADR **PASS** (`vadr_flag`) marks a submission-ready consensus, which is collected in `assemblies_qc_pass/`.
@@ -133,7 +136,7 @@ Daytona is made possible thanks to the following tools:
 
 <small>
 
-**Quality Control**: [FastQC](https://github.com/s-andrews/FastQC) 0.12.1 · [Trimmomatic](https://github.com/usadellab/Trimmomatic) 0.40 · [BBTools](https://github.com/bbushnell/BBTools) 39.84 · [MultiQC](https://github.com/MultiQC/MultiQC) 1.34
+**Quality Control**: [FastQC](https://github.com/s-andrews/FastQC) 0.12.1 · [Trimmomatic](https://github.com/usadellab/Trimmomatic) 0.40 · [BBTools](https://github.com/bbushnell/BBTools) 39.84 · [MultiQC](https://github.com/MultiQC/MultiQC) 1.34 (aggregate + per-sample)
 
 **Human Read Removal**: [NCBI SRA Human Scrubber](https://github.com/ncbi/sra-human-scrubber) 2.2.1
 
@@ -166,15 +169,18 @@ output/
 │   ├── ivar/
 │   ├── vadr/
 │   ├── pangolin/
-│   └── nextclade/
+│   ├── nextclade/
+│   └── multiqc/          # per-sample MultiQC (raw + clean FastQC)
 ├── assemblies_qc_pass/
-├── multiqc/
+├── all_multiqc/          # aggregate MultiQC across all samples
 └── summary_report.txt
 ```
 
 | File | Samples | Key fields |
 |------|---------|------------|
 | `summary_report.txt` | All | sample_id · reference · coverage stats · assembly stats · vadr_flag · qc_flag · pangolin_version · lineage · SOTC · kraken2_percent · nextclade_clade · nextclade_version |
+| `all_multiqc/multiqc_report.html` | All | Aggregate QC across all samples |
+| `<sample_id>/multiqc/<sample_id>_multiqc_report.html` | Per sample | Raw + clean FastQC for that sample |
 
 ### 🤝 Contributing
 
