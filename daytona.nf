@@ -28,7 +28,7 @@ include { vadr                           } from './modules/vadr.nf'
 include { pangolin                       } from './modules/pangolin.nf'
 include { nextclade_download; nextclade  } from './modules/nextclade.nf'
 include { summary_report                 } from './modules/summary_report.nf'
-include { multiqc                        } from './modules/multiqc.nf'
+include { multiqc; multiqc_sample        } from './modules/multiqc.nf'
 
 def refFiles() {
     def fa = "${projectDir}/assets/reference/nCoV-2019.reference.fasta"
@@ -74,6 +74,17 @@ workflow {
     bbtools_adapters(trimmomatic.out.reads)
     bbtools_phix(bbtools_adapters.out.reads)
     fastqc_clean(bbtools_phix.out.reads)
+
+    // Per-sample MultiQC over this sample's raw + clean FastQC
+    ch_sample_fastqc = fastqc.out.zip
+        .map { meta, zips -> [ meta.id, meta, zips ] }
+        .join( fastqc_clean.out.zip.map { meta, zips -> [ meta.id, zips ] } )
+        .map { _id, meta, raw, clean ->
+            def raw_list   = raw   instanceof List ? raw   : [raw]
+            def clean_list = clean instanceof List ? clean : [clean]
+            [ meta, raw_list + clean_list ]
+        }
+    multiqc_sample(ch_sample_fastqc)
 
     // Taxonomic screen
     kraken2(bbtools_phix.out.reads)
