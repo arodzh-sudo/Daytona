@@ -1,6 +1,6 @@
 process summary_report {
     tag "summary"
-    publishDir "${params.output}", mode: 'copy'
+    publishDir { "${params.output}" }, mode: 'copy', pattern: 'summary_report.txt'
 
     input:
         val  barrier
@@ -16,6 +16,7 @@ process summary_report {
         path nextclade_version_file
     output:
         path "summary_report.txt", emit: report
+        path "*_mqc.tsv",          emit: mqc_tables, optional: true
 
     script:
     """

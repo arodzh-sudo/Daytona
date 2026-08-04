@@ -12,11 +12,47 @@ BPHL GitHub SOP format.
 Later additions:
 
 - Per-sample MultiQC (`multiqc_sample`) over each sample's raw + clean FastQC, published to
-  `output/<sample_id>/multiqc/`; the aggregate MultiQC output dir renamed to
-  `output/all_multiqc/` and now runs with `--ignore "*/multiqc/*" --ignore "*/all_multiqc/*"`
-  so it no longer re-ingests MultiQC report/data dirs
+  `output/<sample_id>/multiqc/`
 - `nextflow.config` compacted with regex `withName` selectors (`fastqc.*`, `bbtools.*`,
   `samtools.*`, `ivar.*`)
+- `assets/multiqc_config.yaml` and `assets/daytona_report.css`: branded, interactive run-level
+  dashboard (`output/daytona_report.html`) replacing the generic aggregate report. The run-level
+  `multiqc` process stages the config, CSS and custom tables, writes an inline Software Versions
+  table from the container tags pinned in `nextflow.config`, and removes the `_mqc.tsv` files
+  after each run so a resumed run does not re-ingest stale tables
+- `bin/summary_report.py`: `_mqc_preamble`/`_write_mqc`/`emit_daytona_mqc_tables` write
+  `daytona_lineage_mqc.tsv` and `daytona_assembly_mqc.tsv`, rendered as sortable, color-coded
+  tables in the dashboard. SOTC stays a `summary_report.txt` column and is not shown there
+- `modules/fastqc.nf`: the `fastqc` process symlinks its inputs to `<sample>_R{1,2}_raw.fastq.gz`
+  before running, so raw and clean reads collapse onto one General Statistics row per sample
+  instead of two. MultiQC keys FastQC rows off the `Filename` recorded inside `fastqc_data.txt`,
+  which follows the input name, so renaming the output zip has no effect
+- `.gitattributes` to enforce LF line endings
+- All 20 `publishDir` directives across `modules/*.nf` rewritten from bare-string to closure
+  form (`publishDir { "..." }, mode: 'copy'`), required by the v2 strict script parser that
+  Nextflow 26.04 makes the default. The bare-string form evaluates the path at
+  process-definition time, before `meta` is in scope, raising `No such variable: meta` at
+  module load. The pipeline now runs on Nextflow 23.04 through 26.x
+- `daytona.nf`: the read channel gets `.ifEmpty { error(...) }`, so an input directory with no
+  matching FASTQ files aborts immediately instead of exiting 0 having done nothing; `ch_barrier`
+  gets `.ifEmpty(true)`, so a run where no sample reaches VADR, Pangolin or Nextclade still
+  triggers `summary_report` instead of stalling
+- `bin/summary_report.py`: `percent_genome_cov_map` renamed to `percent_genome_cov_aligned`
+  (breadth of coverage from the mapped BAM) and `percent_ref_genome_cov` renamed to
+  `percent_genome_cov_assembled` (completeness of the final iVar consensus, the value `qc_flag`
+  is thresholded on). These are the names `Daytona_dengue` and `Daytona_chikv` use
+- `bin/summary_report.py`: exits nonzero when `samtools_coverage`, `ivar_consensus`, `qc_gate`,
+  `nextclade`, `pangolin` or `vadr` produced zero successful outputs across every sample that
+  reached them. Those processes run under `errorStrategy = 'ignore'`, which otherwise reports a
+  broken container, a missing reference or a bad mount the same way it reports one sample's low
+  coverage. VADR is checked against QC-pass samples only, since it is gated on them
+- `modules/summary_report.nf`: emits `*_mqc.tsv` on a channel and scopes `publishDir` to
+  `summary_report.txt`, so the dashboard tables never land in the output directory
+- `nextflow.config`: `env._JAVA_OPTIONS = "-XX:-UsePerfData"` stops the JVM writing hsperfdata,
+  which crashes FastQC, Trimmomatic and BBTools tasks when `/tmp` is full
+- `daytona.sh`: loads the default `nextflow` module instead of pinning `nextflow/25.10.4`
+- `README.md`: Nextflow support range updated to 23.04-26.x; workflow diagram condensed into
+  pipeline-stage categories; output section documents `daytona_report.html`
 
 ### Added
 

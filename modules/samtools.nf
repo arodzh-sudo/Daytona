@@ -1,6 +1,6 @@
 process samtools_bam {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/samtools", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/samtools" }, mode: 'copy'
 
     input:
         tuple val(meta), path(sam)
@@ -30,7 +30,7 @@ process samtools_bam {
 
 process samtools_coverage {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/samtools", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/samtools" }, mode: 'copy'
 
     input:
         tuple val(meta), path(bam), path(bai)
@@ -46,7 +46,7 @@ process samtools_coverage {
 
 process samtools_mpileup {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/samtools", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/samtools" }, mode: 'copy'
 
     input:
         tuple val(meta), path(bam), path(bai), path(reference)

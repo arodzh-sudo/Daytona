@@ -1,6 +1,6 @@
 process pangolin {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/pangolin", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/pangolin" }, mode: 'copy'
 
     input:
         tuple val(meta), path(consensus)
