@@ -1,6 +1,6 @@
 process humanscrubber {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/humanscrubber", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/humanscrubber" }, mode: 'copy'
 
     input:
         tuple val(meta), path(reads)

@@ -26,7 +26,7 @@ process nextclade_download {
 
 process nextclade {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/nextclade", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/nextclade" }, mode: 'copy'
 
     input:
         tuple val(meta), path(consensus), path(dataset)

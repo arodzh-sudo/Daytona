@@ -7,7 +7,7 @@ Writes a 2-column TSV: sample_id, qc_flag.
 
 QC thresholds (genome breadth checked first, then depth — matching the
 legacy flaq_sc2 pipeline precedence):
-    percent_ref_genome_cov >= 80%  AND  mean_depth >= 100x  -> PASS
+    percent_genome_cov_assembled >= 80%  AND  mean_depth >= 100x  -> PASS
 """
 
 import argparse

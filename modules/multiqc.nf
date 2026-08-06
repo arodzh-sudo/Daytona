@@ -1,22 +1,57 @@
 process multiqc {
     tag "multiqc"
-    publishDir "${params.output}/all_multiqc", mode: 'copy'
+    publishDir { "${params.output}" }, mode: 'copy'
 
     input:
         path summary
+        path multiqc_config
+        path custom_css
+        path nf_config
+        path mqc_tables, stageAs: 'mqc_in/*'
+
     output:
-        path("multiqc_report.html"), emit: report
-        path("multiqc_data/"),       emit: data
+        path("daytona_report.html"), emit: report
 
     script:
     """
-    multiqc ${params.output} --interactive --ignore "*/multiqc/*" --ignore "*/all_multiqc/*"
+    mkdir -p mqc_in
+    cp mqc_in/*_mqc.tsv ${params.output}/ 2>/dev/null || true
+
+    {
+      echo "# id: 'daytona_versions'"
+      echo "# section_name: 'Software Versions'"
+      echo "# description: 'Tool versions from the container tags pinned in nextflow.config.'"
+      echo "# plot_type: 'table'"
+      echo "# pconfig:"
+      echo "#     id: 'daytona_versions_table'"
+      echo "#     col1_header: 'Software'"
+      echo "#     no_violin: true"
+      echo "#     rows_are_samples: false"
+      echo "# headers:"
+      echo "#     Version:"
+      echo "#         scale: false"
+      echo "#         format: '{}'"
+      printf 'Software\\tVersion\\n'
+      grep -hoE "docker://[^']+" ${nf_config} \\
+        | sed -E 's#docker://[^/]*/([^:]+):(.+)#\\1\\t\\2#' \\
+        | sort -u
+    } > "${params.output}/daytona_versions_mqc.tsv"
+
+    multiqc ${params.output} \\
+        -c ${multiqc_config} \\
+        --filename daytona_report.html \\
+        --interactive \\
+        --ignore "*/multiqc/*" \\
+        --ignore "*daytona_report*" \\
+        --ignore "*summary_report.txt"
+
+    rm -f "${params.output}"/daytona_*_mqc.tsv
     """
 }
 
 process multiqc_sample {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/multiqc", mode: 'copy'
+    publishDir { "${params.output}/${meta.id}/multiqc" }, mode: 'copy'
 
     input:
         tuple val(meta), path(fastqc_zips)

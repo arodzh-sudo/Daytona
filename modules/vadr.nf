@@ -1,7 +1,7 @@
 process vadr {
     tag "${meta.id}"
-    publishDir "${params.output}/${meta.id}/vadr",    mode: 'copy', pattern: "*_vadr_results"
-    publishDir "${params.output}/assemblies_qc_pass", mode: 'copy', pattern: "*.consensus.fasta"
+    publishDir { "${params.output}/${meta.id}/vadr" },    mode: 'copy', pattern: "*_vadr_results"
+    publishDir { "${params.output}/assemblies_qc_pass" }, mode: 'copy', pattern: "*.consensus.fasta"
 
     input:
         tuple val(meta), path(consensus)
