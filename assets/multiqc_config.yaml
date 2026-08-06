@@ -58,6 +58,7 @@ remove_sections:
   - "fastqc_clean_fastqc_sequence_length_distribution"
   - "fastqc_clean_fastqc_overrepresented_sequences"
   - "fastqc_clean_fastqc_top_overrepresented_sequences"
+  - "pangolin-run"
 
 report_section_order:
   daytona_lineage:  { order: 4000 }
